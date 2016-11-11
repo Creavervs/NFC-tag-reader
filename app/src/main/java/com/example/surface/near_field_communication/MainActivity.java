@@ -5,6 +5,7 @@ import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
+import android.nfc.tech.NdefFormatable;
 import android.os.AsyncTask;
 import android.os.Looper;
 import android.os.Message;
@@ -233,4 +234,55 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+    //Code to Write a message to te tag.
+
+    private void updateTag(Tag tag, NdefMessage ndefMessage) {
+
+        try {
+            NdefFormatable ndefFormatable = NdefFormatable.get(tag);
+            if (ndefFormatable == null) {
+                Toast.makeText(this, "Tag is not ndef formatable", Toast.LENGTH_SHORT).show();
+            }
+            ndefFormatable.connect();
+            ndefFormatable.format(ndefMessage);
+            ndefFormatable.close();
+
+            Toast.makeText(this, "Tag has been written" ,Toast.LENGTH_SHORT).show();
+
+        } catch (Exception e) {
+            Log.e("format Tag stage", e.getMessage());
+        }
+    }
+
+    private void WriteNdefMessage(Tag tag, NdefMessage ndefMessage) {
+
+
+        try {
+            if(tag == null){
+                Toast.makeText(this, "Tag object cant be null", Toast.LENGTH_SHORT).show();
+            }
+            Ndef ndef = Ndef.get(tag);
+
+            if(ndef == null){
+                updateTag(tag,ndefMessage);
+
+            }
+            else{
+                ndef.connect();
+                if(!ndef.isWritable()){
+                    Toast.makeText(this, "Tag is not Writeable",Toast.LENGTH_SHORT).show();
+                    ndef.close();
+                    return;
+                }
+                ndef.writeNdefMessage(ndefMessage);
+                ndef.close();
+            }
+        } catch (Exception e) {
+
+            Log.e("Write NdefMessage",e.getMessage());
+        }
+
+    }
+
 }
