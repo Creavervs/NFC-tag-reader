@@ -25,6 +25,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.logging.LogRecord;
 
+import static android.nfc.NdefRecord.createTextRecord;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -69,6 +71,13 @@ public class MainActivity extends AppCompatActivity {
             if (MIME_TEXT_PLAIN.equals(type)) {
 
                 Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+
+                // writing tag info here so need a slider condition here for read or write
+
+                NdefMessage ndefMessage= createNdefMessage("New content here");
+                WriteNdefMessage(tag,ndefMessage);
+
+                // reading tag stuff below
                 new NdefReaderTask().execute(tag);
 
             } else {
@@ -167,6 +176,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             NdefMessage ndefMessage = ndef.getCachedNdefMessage();
+           // If message is currently null on the tag then delegate the work into a Handler and print 'Tag is Empty'
             if(ndefMessage == null) {
                 Handler h1 = new Handler(Looper.getMainLooper());
                 h1.post(new Runnable() {
@@ -204,6 +214,9 @@ public class MainActivity extends AppCompatActivity {
          */
 
             byte[] payload = record.getPayload();
+
+           //Catch for if Nothing is currently on tag, Delegates work into the Handler
+
             if(payload.length == 0) {
                 Handler h1 = new Handler(Looper.getMainLooper());
                 h1.post(new Runnable() {
@@ -271,18 +284,30 @@ public class MainActivity extends AppCompatActivity {
             else{
                 ndef.connect();
                 if(!ndef.isWritable()){
+                    // make sures tag is Writeable and not locked
+
                     Toast.makeText(this, "Tag is not Writeable",Toast.LENGTH_SHORT).show();
                     ndef.close();
                     return;
                 }
                 ndef.writeNdefMessage(ndefMessage);
                 ndef.close();
+                Toast.makeText(this, "Tag Written!!",Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
 
             Log.e("Write NdefMessage",e.getMessage());
         }
 
+    }
+    private NdefMessage createNdefMessage(String content){
+
+        // create text record not done yet
+        NdefRecord ndefRecord = createTextRecord("", content);
+
+        NdefMessage ndefMessage = new NdefMessage(new NdefRecord[]{ndefRecord});
+
+        return ndefMessage;
     }
 
 }
