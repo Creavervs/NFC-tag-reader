@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">Near_Field_Communication</string>
+    <string name="switch_text_yes">Writing</string>
+    <string name="switch_text_no">Reading</string>
     <string name="explanation" />
 </resources>
