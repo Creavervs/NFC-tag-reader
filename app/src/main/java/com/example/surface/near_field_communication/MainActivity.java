@@ -14,12 +14,16 @@ import android.os.Bundle;
 import android.app.Activity;
 import android.nfc.NfcAdapter;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.app.PendingIntent;
 import android.content.IntentFilter;
 import android.content.IntentFilter.MalformedMimeTypeException;
 import android.os.Handler;
+import android.widget.ToggleButton;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
@@ -33,8 +37,12 @@ public class MainActivity extends AppCompatActivity {
     public static final String TAG = "NfcDemo";
     public static final String MIME_TEXT_PLAIN = "text/plain";
 
+
+    private EditText editText;
     private TextView myTextView;
     private NfcAdapter myNfcAdapter;
+    private ToggleButton tog1ReadWrite;
+    private Button button;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +53,23 @@ public class MainActivity extends AppCompatActivity {
 
         myTextView = (TextView) findViewById(R.id.textView_explanation);
         myNfcAdapter = NfcAdapter.getDefaultAdapter(this);
+        tog1ReadWrite = (ToggleButton)findViewById(R.id.tog1ReadWrite);
+        editText = (EditText) findViewById(R.id.editText);
+        editText.setHint("Name"); // sets up the initial comment in the edit text box
+        button = (Button)findViewById(R.id.helpButton);// Help Button bottom right of screen
+
+        //private void goToHelpPage(View view) {
+
+
+
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, helpPage.class));
+            }
+        });
+
+
 
         if (myNfcAdapter == null) {
             // Stops here... The check to see if the device supports NFC
@@ -69,16 +94,19 @@ public class MainActivity extends AppCompatActivity {
 
             String type = intent.getType();
             if (MIME_TEXT_PLAIN.equals(type)) {
-
                 Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+                if(tog1ReadWrite.isChecked()) {
+                    // reading tag stuff below
+                    //
+                    new NdefReaderTask().execute(tag);
+                }
+                else {
+                    // writing tag info here so need a slider condition here for read or write
+                    String s = editText.getText().toString();
 
-                // writing tag info here so need a slider condition here for read or write
-
-                NdefMessage ndefMessage= createNdefMessage("New content here");
-                WriteNdefMessage(tag,ndefMessage);
-
-                // reading tag stuff below
-                new NdefReaderTask().execute(tag);
+                    NdefMessage ndefMessage= createNdefMessage(s);
+                    WriteNdefMessage(tag,ndefMessage);
+                }
 
             } else {
                 Log.d(TAG, "Wrong mime type: " + type);
@@ -309,5 +337,9 @@ public class MainActivity extends AppCompatActivity {
 
         return ndefMessage;
     }
+public void tg1ReadWriteOnClick(View view){
+    myTextView.setText("");
 
+
+}
 }
