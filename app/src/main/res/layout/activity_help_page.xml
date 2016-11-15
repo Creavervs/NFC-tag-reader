@@ -23,7 +23,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/aboutUs"
-        android:/>
+
+        android:maxLines = "100"
+        android:scrollbars = "vertical"/>
 
 
 </RelativeLayout>
