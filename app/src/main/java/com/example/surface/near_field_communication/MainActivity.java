@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void writeTag(Tag tag, Intent i)  {
-        NdefMessage message = createTextMessage("Chris Chris Chris");
+        NdefMessage message = createTextMessage("I love you");
         if (tag != null) {
             try {
                 Ndef ndefTag = Ndef.get(tag);

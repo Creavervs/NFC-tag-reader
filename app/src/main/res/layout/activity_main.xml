@@ -26,8 +26,9 @@
         android:layout_height="wrap_content"
         android:showText="true"
         android:text=""
+        android:layout_below="@id/simpleSwitch"
         android:textOn="@string/switch_text_yes"
         android:textOff="@string/switch_text_no"
         />
 
-    </RelativeLayout>
+</RelativeLayout>
