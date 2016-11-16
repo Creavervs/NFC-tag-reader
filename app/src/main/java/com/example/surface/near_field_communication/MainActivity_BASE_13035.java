@@ -5,7 +5,6 @@ import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
-import android.nfc.tech.NdefFormatable;
 import android.os.AsyncTask;
 import android.os.Looper;
 import android.os.Message;
@@ -14,22 +13,16 @@ import android.os.Bundle;
 import android.app.Activity;
 import android.nfc.NfcAdapter;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.app.PendingIntent;
 import android.content.IntentFilter;
 import android.content.IntentFilter.MalformedMimeTypeException;
 import android.os.Handler;
-import android.widget.ToggleButton;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.logging.LogRecord;
-
-import static android.nfc.NdefRecord.createTextRecord;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -37,45 +30,25 @@ public class MainActivity extends AppCompatActivity {
     public static final String TAG = "NfcDemo";
     public static final String MIME_TEXT_PLAIN = "text/plain";
 
-
-    private EditText editText;
     private TextView myTextView;
     private NfcAdapter myNfcAdapter;
-    private ToggleButton tog1ReadWrite;
-    private Button button;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-       //Sets up the NFC adapater and Textview editor
+       // Sets up the NFC adapater and Textview editor
 
         myTextView = (TextView) findViewById(R.id.textView_explanation);
         myNfcAdapter = NfcAdapter.getDefaultAdapter(this);
-        tog1ReadWrite = (ToggleButton)findViewById(R.id.tog1ReadWrite);
-        editText = (EditText) findViewById(R.id.editText);
-        editText.setHint("Name"); // sets up the initial comment in the edit text box
-        button = (Button)findViewById(R.id.helpButton);// Help Button bottom right of screen
-
-        //private void goToHelpPage(View view) {
-
-
-
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, helpPage.class));
-            }
-        });
-
-
 
         if (myNfcAdapter == null) {
             // Stops here... The check to see if the device supports NFC
             Toast.makeText(this, "This device doesn't support NFC.", Toast.LENGTH_LONG).show();
             finish();
             return;
+
         }
         if (!myNfcAdapter.isEnabled()) {
             myTextView.setText("NFC is disabled.");
@@ -89,41 +62,18 @@ public class MainActivity extends AppCompatActivity {
     private void handleIntent(Intent intent) {
         // TODO: handle Intent
         String action = intent.getAction();
-
-        //Checks whether the app is in READING or WRITING mode
-        Switch simpleSwitch = (Switch) findViewById(R.id.simpleSwitch);
-        // check current state of a Switch (true or false).
-        isWriting = simpleSwitch.isChecked();
-
-        //myTextView.setText("reading");
-        if(isWriting){
-            handleWriting(intent);
-            myTextView.setText("Writing");
-            return;
-        }
-
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
 
             String type = intent.getType();
             if (MIME_TEXT_PLAIN.equals(type)) {
-                Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-                if(tog1ReadWrite.isChecked()) {
-                    // reading tag stuff below
-                    //
-                    new NdefReaderTask().execute(tag);
-                }
-                else {
-                    // writing tag info here so need a slider condition here for read or write
-                    String s = editText.getText().toString();
 
-                    NdefMessage ndefMessage= createNdefMessage(s);
-                    WriteNdefMessage(tag,ndefMessage);
-                }
+                Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+                new NdefReaderTask().execute(tag);
 
             } else {
                 Log.d(TAG, "Wrong mime type: " + type);
             }
-        } else if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)) {
+        } else if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)) {
 
             // In case we would still use the Tech Discovered Intent
             Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
@@ -139,9 +89,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void handleWriting(Intent intent){
-
-    }
 
     @Override
     protected void onResume() {
@@ -175,14 +122,26 @@ public class MainActivity extends AppCompatActivity {
          */
         handleIntent(intent);
     }
-
     public static void setupForegroundDispatch(final Activity activity, NfcAdapter adapter) {
-        final Intent intent = new Intent(activity, activity.getClass());
+        final Intent intent = new Intent(activity.getApplicationContext(), activity.getClass());
         intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
-        final PendingIntent pendingIntent = PendingIntent.getActivity(activity, 0, intent, 0);
+        final PendingIntent pendingIntent = PendingIntent.getActivity(activity.getApplicationContext(), 0, intent, 0);
 
-        adapter.enableForegroundDispatch(activity, pendingIntent, null, null);
+        IntentFilter[] filters = new IntentFilter[1];
+        String[][] techList = new String[][]{};
+
+        // Notice that this is the same filter as in our manifest.
+        filters[0] = new IntentFilter();
+        filters[0].addAction(NfcAdapter.ACTION_NDEF_DISCOVERED);
+        filters[0].addCategory(Intent.CATEGORY_DEFAULT);
+        try {
+            filters[0].addDataType(MIME_TEXT_PLAIN);
+        } catch (MalformedMimeTypeException e) {
+            throw new RuntimeException("Check your mime type.");
+        }
+
+        adapter.enableForegroundDispatch(activity, pendingIntent, filters, techList);
     }
 
     /**
@@ -191,8 +150,9 @@ public class MainActivity extends AppCompatActivity {
      */
     public static void stopForegroundDispatch(final Activity activity, NfcAdapter adapter) {
         adapter.disableForegroundDispatch(activity);
-    }
 
+
+    }
     private class NdefReaderTask extends AsyncTask<Tag, Void, String> {
 
         @Override
@@ -202,12 +162,10 @@ public class MainActivity extends AppCompatActivity {
             Ndef ndef = Ndef.get(tag);
             if (ndef == null) {
                 // NDEF is not supported by this Tag.
-                Log.v("DEBUG", "This tag does not support NDEF???");
                 return null;
             }
 
             NdefMessage ndefMessage = ndef.getCachedNdefMessage();
-           // If message is currently null on the tag then delegate the work into a Handler and print 'Tag is Empty'
             if(ndefMessage == null) {
                 Handler h1 = new Handler(Looper.getMainLooper());
                 h1.post(new Runnable() {
@@ -245,9 +203,6 @@ public class MainActivity extends AppCompatActivity {
          */
 
             byte[] payload = record.getPayload();
-
-           //Catch for if Nothing is currently on tag, Delegates work into the Handler
-
             if(payload.length == 0) {
                 Handler h1 = new Handler(Looper.getMainLooper());
                 h1.post(new Runnable() {
@@ -278,71 +233,4 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-    //Code to Write a message to te tag.
-
-    private void updateTag(Tag tag, NdefMessage ndefMessage) {
-
-        try {
-            NdefFormatable ndefFormatable = NdefFormatable.get(tag);
-            if (ndefFormatable == null) {
-                Toast.makeText(this, "Tag is not ndef formatable", Toast.LENGTH_SHORT).show();
-            }
-            ndefFormatable.connect();
-            ndefFormatable.format(ndefMessage);
-            ndefFormatable.close();
-
-            Toast.makeText(this, "Tag has been written" ,Toast.LENGTH_SHORT).show();
-
-        } catch (Exception e) {
-            Log.e("format Tag stage", e.getMessage());
-        }
-    }
-
-    private void WriteNdefMessage(Tag tag, NdefMessage ndefMessage) {
-
-
-        try {
-            if(tag == null){
-                Toast.makeText(this, "Tag object cant be null", Toast.LENGTH_SHORT).show();
-            }
-            Ndef ndef = Ndef.get(tag);
-
-            if(ndef == null){
-                updateTag(tag,ndefMessage);
-
-            }
-            else{
-                ndef.connect();
-                if(!ndef.isWritable()){
-                    // make sures tag is Writeable and not locked
-
-                    Toast.makeText(this, "Tag is not Writeable",Toast.LENGTH_SHORT).show();
-                    ndef.close();
-                    return;
-                }
-                ndef.writeNdefMessage(ndefMessage);
-                ndef.close();
-                Toast.makeText(this, "Tag Written!!",Toast.LENGTH_SHORT).show();
-            }
-        } catch (Exception e) {
-
-            Log.e("Write NdefMessage",e.getMessage());
-        }
-
-    }
-    private NdefMessage createNdefMessage(String content){
-
-        // create text record not done yet
-        NdefRecord ndefRecord = createTextRecord("", content);
-
-        NdefMessage ndefMessage = new NdefMessage(new NdefRecord[]{ndefRecord});
-
-        return ndefMessage;
-    }
-public void tg1ReadWriteOnClick(View view){
-    myTextView.setText("");
-
-
-}
 }

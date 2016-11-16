@@ -14,9 +14,13 @@ import android.os.Bundle;
 import android.app.Activity;
 import android.nfc.NfcAdapter;
 import android.util.Log;
+<<<<<<< HEAD
+import android.widget.Switch;
+=======
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+>>>>>>> 21c8c64fe8098e44cb832253f625948b7084ff3b
 import android.widget.TextView;
 import android.widget.Toast;
 import android.app.PendingIntent;
@@ -41,8 +45,12 @@ public class MainActivity extends AppCompatActivity {
     private EditText editText;
     private TextView myTextView;
     private NfcAdapter myNfcAdapter;
+<<<<<<< HEAD
+    private boolean isWriting;
+=======
     private ToggleButton tog1ReadWrite;
     private Button button;
+>>>>>>> 21c8c64fe8098e44cb832253f625948b7084ff3b
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

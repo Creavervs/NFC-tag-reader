@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-       //Sets up the NFC adapater and Textview editor
+       // Sets up the NFC adapater and Textview editor
 
         myTextView = (TextView) findViewById(R.id.textView_explanation);
         myNfcAdapter = NfcAdapter.getDefaultAdapter(this);
@@ -76,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "This device doesn't support NFC.", Toast.LENGTH_LONG).show();
             finish();
             return;
+
         }
         if (!myNfcAdapter.isEnabled()) {
             myTextView.setText("NFC is disabled.");
@@ -89,19 +90,6 @@ public class MainActivity extends AppCompatActivity {
     private void handleIntent(Intent intent) {
         // TODO: handle Intent
         String action = intent.getAction();
-
-        //Checks whether the app is in READING or WRITING mode
-        Switch simpleSwitch = (Switch) findViewById(R.id.simpleSwitch);
-        // check current state of a Switch (true or false).
-        isWriting = simpleSwitch.isChecked();
-
-        //myTextView.setText("reading");
-        if(isWriting){
-            handleWriting(intent);
-            myTextView.setText("Writing");
-            return;
-        }
-
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
 
             String type = intent.getType();
@@ -123,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 Log.d(TAG, "Wrong mime type: " + type);
             }
-        } else if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)) {
+        } else if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)) {
 
             // In case we would still use the Tech Discovered Intent
             Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
@@ -139,9 +127,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void handleWriting(Intent intent){
-
-    }
 
     @Override
     protected void onResume() {
@@ -175,14 +160,26 @@ public class MainActivity extends AppCompatActivity {
          */
         handleIntent(intent);
     }
-
     public static void setupForegroundDispatch(final Activity activity, NfcAdapter adapter) {
-        final Intent intent = new Intent(activity, activity.getClass());
+        final Intent intent = new Intent(activity.getApplicationContext(), activity.getClass());
         intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
-        final PendingIntent pendingIntent = PendingIntent.getActivity(activity, 0, intent, 0);
+        final PendingIntent pendingIntent = PendingIntent.getActivity(activity.getApplicationContext(), 0, intent, 0);
 
-        adapter.enableForegroundDispatch(activity, pendingIntent, null, null);
+        IntentFilter[] filters = new IntentFilter[1];
+        String[][] techList = new String[][]{};
+
+        // Notice that this is the same filter as in our manifest.
+        filters[0] = new IntentFilter();
+        filters[0].addAction(NfcAdapter.ACTION_NDEF_DISCOVERED);
+        filters[0].addCategory(Intent.CATEGORY_DEFAULT);
+        try {
+            filters[0].addDataType(MIME_TEXT_PLAIN);
+        } catch (MalformedMimeTypeException e) {
+            throw new RuntimeException("Check your mime type.");
+        }
+
+        adapter.enableForegroundDispatch(activity, pendingIntent, filters, techList);
     }
 
     /**
@@ -191,8 +188,9 @@ public class MainActivity extends AppCompatActivity {
      */
     public static void stopForegroundDispatch(final Activity activity, NfcAdapter adapter) {
         adapter.disableForegroundDispatch(activity);
-    }
 
+
+    }
     private class NdefReaderTask extends AsyncTask<Tag, Void, String> {
 
         @Override
@@ -202,7 +200,6 @@ public class MainActivity extends AppCompatActivity {
             Ndef ndef = Ndef.get(tag);
             if (ndef == null) {
                 // NDEF is not supported by this Tag.
-                Log.v("DEBUG", "This tag does not support NDEF???");
                 return null;
             }
 
