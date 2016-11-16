@@ -52,15 +52,4 @@
         android:onClick="goToHelpPage"
         android:label="@string/app_name"/>
 
-
-
-<<<<<<< HEAD
-    <Switch
-        android:id="@+id/simpleSwitch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-
-    </RelativeLayout>
-=======
 </RelativeLayout>
->>>>>>> 21c8c64fe8098e44cb832253f625948b7084ff3b
