@@ -1,29 +1,27 @@
 package com.example.surface.near_field_communication;
 
+import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.IntentFilter.MalformedMimeTypeException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
+import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
 import android.nfc.tech.NdefFormatable;
 import android.os.AsyncTask;
-import android.os.CountDownTimer;
+import android.os.Bundle;
+import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.app.Activity;
-import android.nfc.NfcAdapter;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.app.PendingIntent;
-import android.content.IntentFilter;
-import android.content.IntentFilter.MalformedMimeTypeException;
-import android.os.Handler;
 import android.widget.ToggleButton;
 
 import java.io.UnsupportedEncodingException;
@@ -32,7 +30,7 @@ import java.util.Arrays;
 import static android.nfc.NdefRecord.createTextRecord;
 
 
-public class MainActivity extends AppCompatActivity {
+public class WriteActivity extends AppCompatActivity {
 
     public static final String TAG = "NfcDemo";
     public static final String MIME_TEXT_PLAIN = "text/plain";
@@ -40,8 +38,8 @@ public class MainActivity extends AppCompatActivity {
     private EditText editText;
     private TextView myTextView;
     private NfcAdapter myNfcAdapter;
+    private ToggleButton readEnable;
     private Button helpButton;
-    private Button writeButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,20 +50,15 @@ public class MainActivity extends AppCompatActivity {
 
         myTextView = (TextView) findViewById(R.id.textView_explanation);
         myNfcAdapter = NfcAdapter.getDefaultAdapter(this);
+        readEnable = (ToggleButton)findViewById(R.id.readEnable);
+        editText = (EditText) findViewById(R.id.editText);
+        editText.setHint("Type message here"); // sets up the initial comment in the edit text box
         helpButton = (Button)findViewById(R.id.helpButton);// Help Button bottom right of screen
-        writeButton = (Button)findViewById(R.id.writeEnable);
 
         helpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, HelpActivity.class));
-            }
-        });
-
-        writeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, WriteActivity.class));
+                startActivity(new Intent(WriteActivity.this, HelpActivity.class));
             }
         });
 
@@ -83,45 +76,22 @@ public class MainActivity extends AppCompatActivity {
         }
 
         handleIntent(getIntent());
-
     }
-
-//    private CountDownTimer countDownTimer;
-//
-//    private void startTimer(final int minuti) {
-//        final ProgressBar barTimer = (ProgressBar)findViewById(R.id.barTimer);
-//        countDownTimer = new CountDownTimer(60 * minuti * 1000, 1) {
-//            // 500 means, onTick function will be called at every 500 milliseconds
-//            int increaseTick = -100;
-//            @Override
-//            public void onTick(long leftTimeInMilliseconds) {
-//                long seconds = leftTimeInMilliseconds / 1000;
-//                barTimer.setProgress((int)seconds+100-(++increaseTick));
-//            }
-//            @Override
-//            public void onFinish() {
-//                    barTimer.setProgress(0);
-//            }
-//        }.start();
-//
-//    }
-
     private void handleIntent(Intent intent) {
-        startTimer(1);
         String action = intent.getAction();
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             String type = intent.getType();
             if (MIME_TEXT_PLAIN.equals(type)) {
                 Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-
+                if(readEnable.isChecked()) {
                     // reading tag stuff below
                     new NdefReaderTask().execute(tag);
-
-//                else {
-//                    String s = editText.getText().toString();
-//                    NdefMessage ndefMessage= createNdefMessage(s);
-//                    WriteNdefMessage(tag,ndefMessage);
-//                }
+                }
+                else {
+                    String s = editText.getText().toString();
+                    NdefMessage ndefMessage= createNdefMessage(s);
+                    WriteNdefMessage(tag,ndefMessage);
+                }
             } else {
                 Log.d(TAG, "Wrong mime type: " + type);
             }
@@ -197,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * @param activity The corresponding BaseActivity requesting to stop the foreground dispatch.
+     * @param activity The corresponding {@link BaseActivity} requesting to stop the foreground dispatch.
      * @param adapter The {@link NfcAdapter} used for the foreground dispatch.
      */
     public static void stopForegroundDispatch(final Activity activity, NfcAdapter adapter) {

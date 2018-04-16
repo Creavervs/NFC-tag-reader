@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">Near_Field_Communication</string>
-    <string name="explanation" />
+    <string name="read_mode">Read Mode Enabled</string>
+    <string name="write_mode">Write Mode Enabled</string>
+    <string name="help_label">Help</string>
+    <string name="help_text">This app reads and writes NFC tags</string>
+    <string name="scanned_text">Scanned Text Will appear here</string>
 </resources>

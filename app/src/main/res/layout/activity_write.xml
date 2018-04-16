@@ -10,17 +10,12 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="MainActivity">
 
-
-    <ToggleButton
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:id= "@+id/tog1ReadWrite"
-    android:textOn="Read"
-        android:textOff="Write"
-        android:layout_alignParentEnd="true"
-        android:onClick="tg1ReadWriteOnClick"
-        android:checked="true"
-        android:textAppearance="@style/TextAppearance.AppCompat" />
+    <TextView
+        android:id="@+id/readEnabled"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Read Mode" />
 
     <TextView
         android:id="@+id/textView_explanation"
@@ -39,7 +34,7 @@
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:inputType="text"
         android:imeActionLabel="Done"
-        android:layout_below="@+id/tog1ReadWrite"
+        android:layout_below="@+id/readEnable"
         android:layout_alignParentStart="true" />
 
     <Button
@@ -49,7 +44,17 @@
         android:text ="Help"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:onClick="goToHelpPage"
         android:label="@string/app_name"/>
+
+    <ToggleButton
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id= "@+id/readEnable"
+        android:textOn="Read Mode is enable"
+        android:textOff="Write Mode is enable"
+        android:layout_alignParentEnd="true"
+        android:onClick="tg1ReadWriteOnClick"
+        android:checked="false"
+        android:textAppearance="@style/TextAppearance.AppCompat" />
 
 </RelativeLayout>
